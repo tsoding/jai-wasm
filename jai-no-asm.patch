@@ -1,0 +1,72 @@
+diff -r -u ./jai/modules/Basic/Print.jai ./jai-patched/modules/Basic/Print.jai
+--- ./jai/modules/Basic/Print.jai	2022-06-01 17:42:12.000000000 +0700
++++ ./jai-patched/modules/Basic/Print.jai	2022-06-08 00:01:49.688952738 +0700
+@@ -5,7 +5,7 @@
+ // stb_sprintf's routine. It's probably not much code.
+ //         -jblow, 28 January 2019
+ 
+-USE_SIMD   :: true;
++USE_SIMD   :: false;
+ SIMD_WIDTH :: 16;  // Bytes.
+ 
+ #scope_export
+diff -r -u ./jai/modules/Runtime_Support.jai ./jai-patched/modules/Runtime_Support.jai
+--- ./jai/modules/Runtime_Support.jai	2022-06-01 17:42:12.000000000 +0700
++++ ./jai-patched/modules/Runtime_Support.jai	2022-06-08 00:19:10.146050434 +0700
+@@ -1,3 +1,5 @@
++WASM :: true;
++
+ NUMBER_FLAG_SIGNED   :: 0x40;
+ NUMBER_FLAG_8BIT     :: 0x100;
+ NUMBER_FLAG_16BIT    :: 0x200;
+@@ -9,7 +11,9 @@
+         compile_time_debug_break :: () #compiler #no_context;
+         compile_time_debug_break();
+     } else {
+-        #asm { int3; }  // Break into the debugger, or stop the running process.
++        #if !WASM {
++            #asm { int3; }  // Break into the debugger, or stop the running process.
++        }
+     }
+ }
+ 
+@@ -469,7 +473,9 @@
+             if my_compare_and_swap(*synch_initted, 1, 2) != 1  debug_break();  // Should not happen!
+           case 1;
+             // Maybe some exponential fall offy thing here?
+-            for 1..4 #asm { pause; pause; pause; pause; pause; }
++            #if !WASM {
++                for 1..4 #asm { pause; pause; pause; pause; pause; }
++            }
+           case 2;
+         }
+     }
+@@ -477,9 +483,13 @@
+ 
+ // We don't want to take a dependency on Atomics, so here is a simple one that just does s32.
+ my_compare_and_swap :: (dest: *s32, old: s32, new: s32) -> (actual_old_value: s32) #no_context {
+-    #asm {
+-        old === a;
+-        lock_cmpxchg.d old, [dest], new;
++    #if WASM {
++        if <<dest == old then <<dest = new;
++    } else {
++        #asm {
++            old === a;
++            lock_cmpxchg.d old, [dest], new;
++        }
+     }
+ 
+     return old;
+diff -r -u ./jai/modules/X11/module.jai ./jai-patched/modules/X11/module.jai
+--- ./jai/modules/X11/module.jai	2021-11-25 20:18:02.000000000 +0700
++++ ./jai-patched/modules/X11/module.jai	2022-06-07 23:10:56.603705911 +0700
+@@ -3447,7 +3447,7 @@
+ 
+ wchar_t :: u64; // #Cleanup The Xlib headers specify this as unsigned long if it is not defined in any headers, we should probably remove this when we figure out where types like this belong
+ 
+-libX11 :: #foreign_library "libX11";
++libX11 :: #foreign_system_library "libX11";
+ 
+ // mesa clumps its emulated GLX API into libgl, while hardware vendors seem to supply
+ // a dedicated libGLX.so, but it seems not linking GLX explicitly still works with hardware vendor libs...

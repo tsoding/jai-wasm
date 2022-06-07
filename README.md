@@ -2,6 +2,8 @@
 
 ## Quick Start
 
+First, apply [jai-no-asm.patch](./jai-no-asm.patch) to your Jai distribution. It tries to get rid of `#asm` blocks because they are not compilable to WASM.
+
 ```console
 $ jai -version
 Version: beta 0.1.027, built on 5 June 2022.
