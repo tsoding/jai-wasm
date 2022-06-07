@@ -1,0 +1,5 @@
+.build/
+*.wasm
+*.wat
+*.o
+wasm-jai
