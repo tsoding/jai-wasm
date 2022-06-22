@@ -16,9 +16,7 @@
 
     bo := get_build_options(w);
     bo.output_executable_name            = "wasm-jai";
-    /* bo.dead_code_elimination             = .ALL; */
     bo.stack_trace                       = false;
-    bo.enable_auto_dereference           = false;
     bo.use_ansi_color                    = false;
     bo.array_bounds_check                = .OFF;
     bo.cast_bounds_check                 = .OFF;
