@@ -2,4 +2,5 @@
 *.wasm
 *.wat
 *.o
+*.so
 wasm-jai
