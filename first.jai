@@ -9,7 +9,7 @@
         exit(1);
     }
 
-    if !build_cpp_dynamic_lib("libfoo", "foo.c") {
+    if !build_cpp_dynamic_lib("libwasmstub", "wasmstub.c") {
         print("Error: Could not build dynamic lib with external names");
         exit(1);
     }
