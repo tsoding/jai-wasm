@@ -1,10 +1,16 @@
 #import "Basic";
 #import "Compiler";
+#import "BuildCpp";
 
 #run {
     w := compiler_create_workspace("Jai WASM");
     if !w {
         print("Error: Could not create a workspace\n");
+        exit(1);
+    }
+
+    if !build_cpp_dynamic_lib("libfoo", "foo.c") {
+        print("Error: Could not build dynamic lib with external names");
         exit(1);
     }
 
