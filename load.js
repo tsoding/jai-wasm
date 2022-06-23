@@ -37,7 +37,10 @@ WebAssembly.instantiateStreaming(fetch('./main_fixed.wasm'), {
     }
 }).then(wasmModule => {
     const sum = find_name_by_prefix(wasmModule.instance.exports, "sum_");
-    console.log(sum);
     sum(34n, 35n, 0);
+    // NOTE: We are just writing the result of the sum() to address 0.
+    // It probably corrupts something in the memory.
+    // Everything works completely accidentally.
+    // But it works.
     console.log(new Uint32Array(wasmModule.instance.exports.memory.buffer)[0]);
 }).catch(console.error);
