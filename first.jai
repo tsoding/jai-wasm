@@ -8,6 +8,13 @@ THIRD_PARTY_PATH :: "./3rd_party";
 LLVM_VERSION :: "13.0.0";
 WABT_VERSION :: "1.0.29";
 
+download_3rd_party :: () {
+    // TODO: download 3rd party dependencies via Curl
+    // 
+    // https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
+    // https://github.com/WebAssembly/wabt/releases/download/1.0.29/wabt-1.0.29-ubuntu.tar.gz
+}
+
 cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location) {
     result, output_string, error_string := run_command(..args, capture_and_return_output = redirect_stdout_to_file != "");
     if result.exit_code {
@@ -20,9 +27,7 @@ cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location)
     if redirect_stdout_to_file then write_entire_file(redirect_stdout_to_file, output_string);
 }
 
-build_wasm :: (w: Workspace, target := OS) {
-    assert(target == .LINUX, "TODO: Only Linux supported for now");
-
+build_wasm :: (w: Workspace) {
     bo := get_build_options(w);
 
     CLANG := tprint("%/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/clang", THIRD_PARTY_PATH, LLVM_VERSION);
@@ -49,6 +54,8 @@ build_wasm :: (w: Workspace, target := OS) {
 }
 
 #run {
+    assert(target == .LINUX, "TODO: Only Linux is supported for now");
+
     w := compiler_create_workspace("Jai WASM");
     if !w {
         print("Error: Could not create a workspace\n");
@@ -104,6 +111,7 @@ build_wasm :: (w: Workspace, target := OS) {
 
     compiler_end_intercept(w);
 
+    download_3rd_party();
     build_wasm(w);
 
     set_build_options_dc(.{do_output=false});
