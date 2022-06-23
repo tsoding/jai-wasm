@@ -3,7 +3,7 @@
 //
 // The idea is to trick the Jai compiler into treating this as an external function,
 // so it can be substituded in load.js.
-void bar(void)
+void JavaScript_function_called_by_JAI(void)
 {
 }
 
