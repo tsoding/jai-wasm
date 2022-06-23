@@ -1,5 +1,3 @@
-// const fs = require('fs');
-
 function find_name_by_prefix(exports, prefix) {
     for (let name in exports) {
         if (name.startsWith(prefix)) {
@@ -10,6 +8,14 @@ function find_name_by_prefix(exports, prefix) {
 }
 
 WebAssembly.instantiateStreaming(fetch('./main_fixed.wasm'), {
+    // TODO: is it possible to come up with magical object that acts
+    // like a table and for any unknown names returns the function that
+    // prints the "NOT IMPLEMENTED" message?
+    //
+    // Maybe via Proxy: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy
+    // 
+    // This would be useful in case the set of functions that require such stub
+    // changes between the version of the compiler.
     "env": {
         "memset": (...args) => {console.error("NOT IMPLEMENTED: memset", args)},
         "malloc": (...args) => {console.error("NOT IMPLEMENTED: malloc", args)},
