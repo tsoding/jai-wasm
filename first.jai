@@ -20,8 +20,10 @@ cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location)
     if redirect_stdout_to_file then write_entire_file(redirect_stdout_to_file, output_string);
 }
 
-build_wasm :: (target := OS) {
+build_wasm :: (w: Workspace, target := OS) {
     assert(target == .LINUX, "TODO: Only Linux supported for now");
+
+    bo := get_build_options(w);
 
     CLANG := tprint("%/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/clang", THIRD_PARTY_PATH, LLVM_VERSION);
     WASMLD := tprint("%/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/wasm-ld", THIRD_PARTY_PATH, LLVM_VERSION);
@@ -30,14 +32,18 @@ build_wasm :: (target := OS) {
 
     // TODO: get the name of the object file somehow automatically
     // Probably via the compiler interseption
-    OBJ_NAME :: "wasm-jai_0_w3";
+    BASE_NAME :: "wasm-jai_0_w3";
+    LL_NAME := tprint("%/%.ll", bo.intermediate_path, BASE_NAME);
+    O_NAME := tprint("%/%.o", bo.intermediate_path, BASE_NAME);
+    WAT_NAME := tprint("%/%.wat", bo.intermediate_path, BASE_NAME);
+    FIXED_O_NAME := tprint("%/%_fixed.o", bo.intermediate_path, BASE_NAME);
+    FIXED_WAT_NAME := tprint("%/%_fixed.wat", bo.intermediate_path, BASE_NAME);
 
-    // TODO: get the `.build` location from the workspace
-    cmd(CLANG, "--target=wasm32", "-c", tprint("./.build/%.ll", OBJ_NAME));
-    cmd(WASM2WAT, "./wasm-jai_0_w3.o", redirect_stdout_to_file = tprint("%.wat", OBJ_NAME));
-    cmd(WAT2WASM, "-r", "wasm-jai_0_w3.wat", "-o", tprint("%_fixed.o", OBJ_NAME));
-    cmd(WASM2WAT, "./wasm-jai_0_w3_fixed.o", redirect_stdout_to_file = tprint("%_fixed.wat", OBJ_NAME));
-    cmd(WASMLD, "-m", "wasm32", "--no-entry", "--export-all", "--allow-undefined", tprint("%_fixed.o", OBJ_NAME), "-o", "main.wasm");
+    cmd(CLANG, "--target=wasm32", "-o", O_NAME, "-c", LL_NAME);
+    cmd(WASM2WAT, O_NAME, redirect_stdout_to_file = WAT_NAME);
+    cmd(WAT2WASM, "-r", WAT_NAME, "-o", FIXED_O_NAME);
+    cmd(WASM2WAT, FIXED_O_NAME, redirect_stdout_to_file = FIXED_WAT_NAME);
+    cmd(WASMLD, "-m", "wasm32", "--no-entry", "--export-all", "--allow-undefined", FIXED_O_NAME, "-o", "main.wasm");
     cmd(WASM2WAT, "./main.wasm", redirect_stdout_to_file = "main.wat");
     cmd(WAT2WASM, "main.wat", "-o", "main_fixed.wasm");
 }
@@ -98,7 +104,7 @@ build_wasm :: (target := OS) {
 
     compiler_end_intercept(w);
 
-    build_wasm();
+    build_wasm(w);
 
     set_build_options_dc(.{do_output=false});
 }
