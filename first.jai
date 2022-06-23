@@ -84,15 +84,25 @@ build_wasm :: (base_name: string) {
         if message.kind == {
             case .TYPECHECKED; {
                 typechecked := cast(*Message_Typechecked) message;
-                for typechecked.all {
+                for typechecked.procedure_bodies {
+                    contains_asm := false;
                     for it.subexpressions {
                         if it.kind == .ASM {
-                            // TODO: could we just delete the asm blocks so we don't have to patch anything?
-                            // You end up not using code with asm blocks anyway.
-                            print("%:%: ASM DETECTED!!!\n",
-                                  it.location.enclosing_load.fully_pathed_filename,
-                                  it.location.l0);
+                            // NOTE: #asm blocks are not translatable to WASM, we need to remove them
+                            compiler_report("ASM DETECTED!!!", make_location(it), .WARNING);
+                            contains_asm = true;
                         }
+                    }
+                    if contains_asm {
+                        body := it.expression;
+                        // TODO: delete only the ASM blocks
+                        // I'm just too lazy to write such a surgically precise code right now, sorry
+                        compiler_report(tprint("Removing the whole body of the function %. DON'T USE IT!!!", body.header.name),
+                                        make_location(body),
+                                        .WARNING);
+                        new_statements : [..] *Code_Node;
+                        body.block.statements = new_statements;
+                        compiler_modify_procedure(w, body);
                     }
                 }
             }

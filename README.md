@@ -4,10 +4,6 @@ Jai does not officially support WebAssembly compilation target. BUT! It allows y
 
 ## Instructions
 
-### Patch
-
-First, apply [jai-no-asm.patch](./jai-no-asm.patch) to your Jai distribution (make sure that you are using beta 0.1.027). It tries to get rid of `#asm` blocks because they are not compilable to WASM.
-
 ### 3rd Party Dependencies
 
 TBD
