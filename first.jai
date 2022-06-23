@@ -4,6 +4,10 @@
 #import "Process";
 #import "File";
 
+THIRD_PARTY_PATH :: "./3rd_party";
+LLVM_VERSION :: "13.0.0";
+WABT_VERSION :: "1.0.29";
+
 cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location) {
     result, output_string, error_string := run_command(..args, capture_and_return_output = redirect_stdout_to_file != "");
     if result.exit_code {
@@ -19,19 +23,21 @@ cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location)
 build_wasm :: (target := OS) {
     assert(target == .LINUX, "TODO: Only Linux supported for now");
 
-    LLVM_VERSION :: "13.0.0";
-    WABT_VERSION :: "1.0.29";
+    CLANG := tprint("%/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/clang", THIRD_PARTY_PATH, LLVM_VERSION);
+    WASMLD := tprint("%/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/wasm-ld", THIRD_PARTY_PATH, LLVM_VERSION);
+    WASM2WAT := tprint("%/wabt-%/bin/wasm2wat", THIRD_PARTY_PATH, WABT_VERSION);
+    WAT2WASM := tprint("%/wabt-%/bin/wat2wasm", THIRD_PARTY_PATH, WABT_VERSION);
 
-    CLANG := tprint("./3rd_party/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/clang", LLVM_VERSION);
-    WASMLD := tprint("./3rd_party/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/wasm-ld", LLVM_VERSION);
-    WASM2WAT := tprint("./3rd_party/wabt-%/bin/wasm2wat", WABT_VERSION);
-    WAT2WASM := tprint("./3rd_party/wabt-%/bin/wat2wasm", WABT_VERSION);
+    // TODO: get the name of the object file somehow automatically
+    // Probably via the compiler interseption
+    OBJ_NAME :: "wasm-jai_0_w3";
 
-    cmd(CLANG, "--target=wasm32", "-c", "./.build/wasm-jai_0_w3.ll");
-    cmd(WASM2WAT, "./wasm-jai_0_w3.o", redirect_stdout_to_file = "wasm-jai_0_w3.wat");
-    cmd(WAT2WASM, "-r", "wasm-jai_0_w3.wat", "-o", "wasm-jai_0_w3_fixed.o");
-    cmd(WASM2WAT, "./wasm-jai_0_w3_fixed.o", redirect_stdout_to_file = "wasm-jai_0_w3_fixed.wat");
-    cmd(WASMLD, "-m", "wasm32", "--no-entry", "--export-all", "--allow-undefined", "wasm-jai_0_w3_fixed.o", "-o", "main.wasm");
+    // TODO: get the `.build` location from the workspace
+    cmd(CLANG, "--target=wasm32", "-c", tprint("./.build/%.ll", OBJ_NAME));
+    cmd(WASM2WAT, "./wasm-jai_0_w3.o", redirect_stdout_to_file = tprint("%.wat", OBJ_NAME));
+    cmd(WAT2WASM, "-r", "wasm-jai_0_w3.wat", "-o", tprint("%_fixed.o", OBJ_NAME));
+    cmd(WASM2WAT, "./wasm-jai_0_w3_fixed.o", redirect_stdout_to_file = tprint("%_fixed.wat", OBJ_NAME));
+    cmd(WASMLD, "-m", "wasm32", "--no-entry", "--export-all", "--allow-undefined", tprint("%_fixed.o", OBJ_NAME), "-o", "main.wasm");
     cmd(WASM2WAT, "./main.wasm", redirect_stdout_to_file = "main.wat");
     cmd(WAT2WASM, "main.wat", "-o", "main_fixed.wasm");
 }
@@ -76,6 +82,8 @@ build_wasm :: (target := OS) {
                 for typechecked.all {
                     for it.subexpressions {
                         if it.kind == .ASM {
+                            // TODO: could we just delete the asm blocks so we don't have to patch anything?
+                            // You end up not using code with asm blocks anyway.
                             print("%:%: ASM DETECTED!!!\n",
                                   it.location.enclosing_load.fully_pathed_filename,
                                   it.location.l0);
