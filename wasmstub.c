@@ -6,3 +6,5 @@
 void bar(void)
 {
 }
+
+// TODO: generate this file automatically?
