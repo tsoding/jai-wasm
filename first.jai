@@ -9,13 +9,6 @@ THIRD_PARTY_PATH :: "./3rd_party";
 LLVM_VERSION :: "13.0.0";
 WABT_VERSION :: "1.0.29";
 
-download_3rd_party :: () {
-    // TODO: download 3rd party dependencies via Curl
-    // 
-    // https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-    // https://github.com/WebAssembly/wabt/releases/download/1.0.29/wabt-1.0.29-ubuntu.tar.gz
-}
-
 cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location) {
     log("[CMD] %\n", get_quoted_command_string(args));
 
@@ -31,24 +24,12 @@ cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location)
 }
 
 build_wasm :: (base_name: string) {
-    CLANG := tprint("%/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/clang", THIRD_PARTY_PATH, LLVM_VERSION);
-    WASMLD := tprint("%/clang+llvm-%-x86_64-linux-gnu-ubuntu-16.04/bin/wasm-ld", THIRD_PARTY_PATH, LLVM_VERSION);
-    WASM2WAT := tprint("%/wabt-%/bin/wasm2wat", THIRD_PARTY_PATH, WABT_VERSION);
-    WAT2WASM := tprint("%/wabt-%/bin/wat2wasm", THIRD_PARTY_PATH, WABT_VERSION);
-
     LL_NAME := tprint("%.ll", base_name);
     O_NAME := tprint("%.o", base_name);
-    WAT_NAME := tprint("%.wat", base_name);
-    FIXED_O_NAME := tprint("%_fixed.o", base_name);
-    FIXED_WAT_NAME := tprint("%_fixed.wat", base_name);
 
-    cmd(CLANG, "--target=wasm32", "-o", O_NAME, "-c", LL_NAME);
-    cmd(WASM2WAT, O_NAME, redirect_stdout_to_file = WAT_NAME);
-    cmd(WAT2WASM, "-r", WAT_NAME, "-o", FIXED_O_NAME);
-    cmd(WASM2WAT, FIXED_O_NAME, redirect_stdout_to_file = FIXED_WAT_NAME);
-    cmd(WASMLD, "-m", "wasm32", "--no-entry", "--export-all", "--allow-undefined", FIXED_O_NAME, "-o", "main.wasm");
-    cmd(WASM2WAT, "./main.wasm", redirect_stdout_to_file = "main.wat");
-    cmd(WAT2WASM, "main.wat", "-o", "main_fixed.wasm");
+    cmd("clang", "--target=wasm64", "-o", O_NAME, "-c", LL_NAME);
+    cmd("wasm-ld", "-m", "wasm64", "--no-entry", "--export-all", "--allow-undefined", O_NAME, "-o", "main64.wasm");
+    cmd(tprint("%/wasm64232", THIRD_PARTY_PATH), "-o", "main32.wasm", "main64.wasm");
 }
 
 #run {
@@ -123,7 +104,6 @@ build_wasm :: (base_name: string) {
 
     compiler_end_intercept(w);
 
-    download_3rd_party();
     build_wasm(path_strip_extension(object_file_to_translate_to_wasm));
 
     set_build_options_dc(.{do_output=false});

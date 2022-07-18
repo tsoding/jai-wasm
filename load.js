@@ -18,7 +18,7 @@ function make_environment(env) {
     });
 }
 
-WebAssembly.instantiateStreaming(fetch('./main_fixed.wasm'), {
+WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
     "env": make_environment({
         "JavaScript_function_called_by_JAI": (a, b) => {
             console.log("YEP! Jai just called to JavaScript! It's a JaiScript now! KEKW");
@@ -27,7 +27,7 @@ WebAssembly.instantiateStreaming(fetch('./main_fixed.wasm'), {
     })
 }).then(wasmModule => {
     const JAI_function_called_by_JavaScript = find_name_by_prefix(wasmModule.instance.exports, "JAI_function_called_by_JavaScript_");
-    JAI_function_called_by_JavaScript(34n, 35n, 0);
+    JAI_function_called_by_JavaScript(34n, 35n, 0n);
     // NOTE: We are just writing the result of the JAI_function_called_by_JavaScript() to address 0.
     // It probably corrupts something in the memory.
     // Everything works completely accidentally.
