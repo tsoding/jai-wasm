@@ -24,10 +24,10 @@ cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location)
 }
 
 build_wasm :: (base_name: string) {
-    LL_NAME := tprint("%.ll", base_name);
+    BC_NAME := tprint("%.bc", base_name);
     O_NAME := tprint("%.o", base_name);
 
-    cmd("clang", "--target=wasm64", "-o", O_NAME, "-c", LL_NAME);
+    cmd("clang", "--target=wasm64", "-o", O_NAME, "-c", BC_NAME);
     cmd("wasm-ld", "-m", "wasm64", "--no-entry", "--export-all", "--allow-undefined", O_NAME, "-o", "main64.wasm");
     cmd(tprint("%/wasm64232", THIRD_PARTY_PATH), "-o", "main32.wasm", "main64.wasm");
 }
@@ -49,7 +49,8 @@ build_wasm :: (base_name: string) {
 
     bo := get_build_options(w);
     bo.output_executable_name            = "wasm-jai";
-    bo.llvm_options.output_llvm_ir       = true;
+    bo.optimization_level                = .RELEASE;
+    bo.llvm_options.output_bitcode       = true;
     bo.llvm_options.enable_split_modules = false;
     set_build_options(bo, w);
 

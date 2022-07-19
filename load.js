@@ -1,3 +1,14 @@
+const NULL64 = 0n;
+// TODO: duplicate resolution definition
+// Come up with a better way of communicating resolution between JS and WASM environments
+
+let app = document.getElementById("app");
+app.width = 640;
+app.height = 480;
+let ctx = app.getContext("2d");
+
+let w = null;
+
 function find_name_by_prefix(exports, prefix) {
     for (let name in exports) {
         if (name.startsWith(prefix)) {
@@ -20,17 +31,25 @@ function make_environment(env) {
 
 WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
     "env": make_environment({
-        "JavaScript_function_called_by_JAI": (a, b) => {
-            console.log("YEP! Jai just called to JavaScript! It's a JaiScript now! KEKW");
-            return a + b + 1000000n;
+        "render": (pixels_ptr) => {
+            const pixels = new Uint8ClampedArray(w.instance.exports.memory.buffer, Number(pixels_ptr), app.width*app.height*4);
+            ctx.putImageData(new ImageData(pixels, app.width, app.height), 0, 0);
         }
     })
-}).then(wasmModule => {
-    const JAI_function_called_by_JavaScript = find_name_by_prefix(wasmModule.instance.exports, "JAI_function_called_by_JavaScript_");
-    JAI_function_called_by_JavaScript(34n, 35n, 0n);
-    // NOTE: We are just writing the result of the JAI_function_called_by_JavaScript() to address 0.
-    // It probably corrupts something in the memory.
-    // Everything works completely accidentally.
-    // But it works.
-    console.log(new Uint32Array(wasmModule.instance.exports.memory.buffer)[0]);
+}).then(w0 => {
+    w = w0;
+    const update = find_name_by_prefix(w.instance.exports, "update_");
+
+    let prev = null;
+    function first(timestamp) {
+        prev = timestamp;
+        window.requestAnimationFrame(loop);
+    }
+    function loop(timestamp) {
+        const dt = (timestamp - prev)*0.001;
+        prev = timestamp;
+        update(NULL64, dt);
+        window.requestAnimationFrame(loop);
+    }
+    window.requestAnimationFrame(first);
 }).catch(console.error);
