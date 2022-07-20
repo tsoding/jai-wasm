@@ -1,5 +1,6 @@
 .build/
 *.wasm
+!main32.wasm
 *.wat
 *.o
 *.so
