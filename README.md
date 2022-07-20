@@ -36,4 +36,4 @@ So to avoid that error you need to compiler with `--target=wasm64` flag of Clang
 
 ## Contribution
 
-If you have any questions or suggestions feel free to file an Issue or a PR.
+If you have any questions, suggestions or something is not documented well feel free to file an Issue or a PR.
