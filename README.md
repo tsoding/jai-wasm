@@ -1,6 +1,6 @@
 # Simple Jai to WASM Proof-of-Concept
 
-![thumbnail](./thumbnail.png)
+[![thumbnail](./thumbnail.png)](https://tsoding.org/jai-wasm/)
 
 *Screenshot from [https://tsoding.org/jai-wasm/](https://tsoding.org/jai-wasm/)*
 
