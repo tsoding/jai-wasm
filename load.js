@@ -61,9 +61,9 @@ WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
         window.requestAnimationFrame(loop);
     }
     function loop(timestamp) {
-        const dt = (timestamp - prev)*0.001;
+        const dt = timestamp - prev;
         prev = timestamp;
-        update(NULL64, dt);
+        update(NULL64, BigInt(Math.floor(dt)));
         window.requestAnimationFrame(loop);
     }
     window.requestAnimationFrame(first);

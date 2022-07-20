@@ -2,7 +2,6 @@
 // executing in load.js
 
 #import "Basic";
-#import "Math";
 #import "Compiler";
 #import "stb_image";
 #import "stb_image_resize";
@@ -13,8 +12,10 @@ BACKGROUND_COLOR : u32 : 0xFF181818;
 LOGO_IMAGE :: #run bake_wasm_logo(128, 128);
 
 display : [HEIGHT*WIDTH]u32;
-logo_position := Vector2.{100, 150};
-logo_velocity := Vector2.{100, 120};
+logo_x := 100;
+logo_y := 150;
+logo_dx := 150;
+logo_dy := 150;
 
 render :: (pixels: *u32) #foreign wasmstub;
 
@@ -50,11 +51,6 @@ bake_wasm_logo :: (w: s32, h: s32) -> Image {
 }
 
 mix_colors :: (c0: u32, c1: u32) -> u32 {
-    // ra, rb, alpha
-    // alpha = 0..255
-    // ra + (rb - ra)*(alpha/0xFF)
-    // ra + alpha*(rb - ra)/0xFF
-
     r0, g0, b0, a0 := unpack_color(c0);
     r1, g1, b1, a1 := unpack_color(c1);
     alpha := a1;
@@ -67,12 +63,12 @@ mix_colors :: (c0: u32, c1: u32) -> u32 {
     return pack_color(r, g, b, a);
 }
 
-copy_image :: (using image: Image, position: Vector2) {
+copy_image :: (using image: Image, pos_x: int, pos_y: int) {
     for dy: 0..h-1 {
-        y := cast(int) floor(position.y + dy);
+        y := pos_y + dy;
         if !(0 <= y && y < HEIGHT) continue;
         for dx: 0..w-1 {
-            x := cast(int) floor(position.x + dx);
+            x := pos_x + dx;
             if !(0 <= x && x < WIDTH) continue;
             display[y*WIDTH + x] = mix_colors(display[y*WIDTH + x], pixels[dy*w + dx]);
         }
@@ -119,24 +115,24 @@ init_game :: () {
     fill_background();
 }
 
-update :: (dt: float) {
-    display_size :: Vector2.{WIDTH, HEIGHT};
-    logo_size := make_vector2(cast(float) LOGO_IMAGE.w, cast(float) LOGO_IMAGE.h);
+update :: (dt: int) {
+    patch_background(logo_x, logo_y, LOGO_IMAGE.w, LOGO_IMAGE.h);
 
-    patch_background(
-        xx logo_position.x - 1, xx logo_position.y - 1,
-        xx logo_size.x + 2, xx logo_size.y + 2);
-
-    for i: 0..1 {
-        a := logo_position.component[i] + logo_velocity.component[i]*dt;
-        if !(0 <= a && a + logo_size.component[i] < display_size.component[i]) {
-            logo_velocity.component[i] *= -1;
-            continue;
-        }
-        logo_position.component[i] = a;
+    nx := logo_x + logo_dx*dt/1000;
+    if 0 <= nx && nx + LOGO_IMAGE.w < WIDTH {
+        logo_x = nx;
+    } else {
+        logo_dx *= -1;
     }
 
-    copy_image(LOGO_IMAGE, logo_position);
+    ny := logo_y + logo_dy*dt/1000;
+    if 0 <= ny && ny + LOGO_IMAGE.h < HEIGHT {
+        logo_y = ny;
+    } else {
+        logo_dy *= -1;
+    }
+
+    copy_image(LOGO_IMAGE, logo_x, logo_y);
     render(display.data);
 }
 
