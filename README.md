@@ -1,4 +1,4 @@
-# Simple Jai to WASM Proof-of-Concept
+# Jai WebAssembly Proof-of-Concept
 
 [![thumbnail](./thumbnail.png)](https://tsoding.org/jai-wasm/)
 
