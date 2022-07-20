@@ -8,7 +8,6 @@
 
 WIDTH :: 640;
 HEIGHT :: 480;
-BACKGROUND_COLOR : u32 : 0xFF181818;
 LOGO_IMAGE :: #run bake_wasm_logo(128, 128);
 
 display : [HEIGHT*WIDTH]u32;
