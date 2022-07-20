@@ -33,3 +33,7 @@ The library that comes with Jai uses quite a few `#asm` blocks. The problem is t
 If you ever tried to compile Jai to WebAssembly you are probably familiar with that error. It happens when you try to compile the program specifically to wasm32. Jai Compiler only supports 64 bit platform and does all of its data segments computations around 64 bits (at least this is how I think it works). 
 
 So to avoid that error you need to compiler with `--target=wasm64` flag of Clang which generates a binary with [memory64](https://github.com/WebAssembly/memory64) extension. But since this extension is experimental (yes, addressing memory with 64 bits is experimental in 2022...) such binary may not work everywhere. To make the binary more portable we convert it to wasm32 using [wasm64232](https://github.com/tsoding/wabt-wasm64232) utility.
+
+## Contribution
+
+If you have any questions or suggestions feel free to file an Issue or a PR.
