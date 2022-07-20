@@ -34,11 +34,26 @@ WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
         "render": (pixels_ptr) => {
             const pixels = new Uint8ClampedArray(w.instance.exports.memory.buffer, Number(pixels_ptr), app.width*app.height*4);
             ctx.putImageData(new ImageData(pixels, app.width, app.height), 0, 0);
+        },
+        "write": (fd, buf, count) => {
+            const buffer = w.instance.exports.memory.buffer;
+            const bytes = new Uint8Array(buffer, Number(buf), Number(count));
+            console.log(new TextDecoder().decode(bytes));
+            return count;
+        },
+        "memset": (s, c, n) => {
+            const buffer = w.instance.exports.memory.buffer;
+            const bytes = new Uint8Array(buffer, Number(s), Number(n));
+            bytes.fill(c);
+            return s;
         }
     })
 }).then(w0 => {
     w = w0;
     const update = find_name_by_prefix(w.instance.exports, "update_");
+    const init_game = find_name_by_prefix(w.instance.exports, "init_game_");
+
+    init_game(NULL64);
 
     let prev = null;
     function first(timestamp) {
