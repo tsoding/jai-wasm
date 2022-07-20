@@ -8,6 +8,7 @@ app.height = 480;
 let ctx = app.getContext("2d");
 
 let w = null;
+let context = null;
 
 function find_name_by_prefix(exports, prefix) {
     for (let name in exports) {
@@ -46,14 +47,14 @@ WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
             const bytes = new Uint8Array(buffer, Number(s), Number(n));
             bytes.fill(c);
             return s;
-        }
+        },
+        "set_context": (c) => context = c,
     })
 }).then(w0 => {
     w = w0;
     const update = find_name_by_prefix(w.instance.exports, "update_");
-    const init_game = find_name_by_prefix(w.instance.exports, "init_game_");
 
-    init_game(NULL64);
+    w.instance.exports.main(0, NULL64);
 
     let prev = null;
     function first(timestamp) {
@@ -63,7 +64,7 @@ WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
     function loop(timestamp) {
         const dt = timestamp - prev;
         prev = timestamp;
-        update(NULL64, BigInt(Math.floor(dt)));
+        update(context, BigInt(Math.floor(dt)));
         window.requestAnimationFrame(loop);
     }
     window.requestAnimationFrame(first);

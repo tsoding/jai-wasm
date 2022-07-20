@@ -18,6 +18,7 @@ logo_dx := 150;
 logo_dy := 150;
 
 render :: (pixels: *u32) #foreign wasmstub;
+set_context :: (c: *Context) #foreign wasmstub;
 
 Image :: struct {
     w: int;
@@ -111,10 +112,6 @@ fill_background :: () {
     patch_background(0, 0, WIDTH, HEIGHT);
 }
 
-init_game :: () {
-    fill_background();
-}
-
 update :: (dt: int) {
     patch_background(logo_x, logo_y, LOGO_IMAGE.w, LOGO_IMAGE.h);
 
@@ -138,6 +135,7 @@ update :: (dt: int) {
 
 wasmstub :: #foreign_library "libwasmstub";
 
-// Entry point that is required by the Jai compiler but completely ignored
-// by the WebAssembly environment that loads up and executes this program
-main :: () {}
+main :: () {
+    fill_background();
+    set_context(*context);
+}
