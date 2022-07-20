@@ -28,7 +28,7 @@ Also check out [./load.js](./load.js) which loads up the final WebAssembly modul
 
 The library that comes with Jai uses quite a few `#asm` blocks. The problem is that they are not translatable to WebAssembly. We wrote a simple meta program in [./first.jai](./first.jai) that simply removes the blocks during the compilation and advises not to call the functions that had the `#asm` blocks. (If you have a better solution, please let me know).
 
-### invalid data symbol offset: `__type_table`
+### "invalid data symbol offset: `__type_table`" and 64 bits
 
 If you ever tried to compile Jai to WebAssembly you are probably familiar with that error. It happens when you try to compile the program specifically to wasm32. Jai Compiler only supports 64 bit platform and does all of its data segments computations around 64 bits (at least this is how I think it works). 
 
