@@ -1,10 +1,6 @@
 const NULL64 = 0n;
-// TODO: duplicate resolution definition
-// Come up with a better way of communicating resolution between JS and WASM environments
 
 let app = document.getElementById("app");
-app.width = 640;
-app.height = 480;
 let ctx = app.getContext("2d");
 
 let w = null;
@@ -32,7 +28,9 @@ function make_environment(env) {
 
 WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
     "env": make_environment({
-        "render": (pixels_ptr) => {
+        "render": (pixels_ptr, width, height) => {
+            app.width = width;
+            app.height = height;
             const pixels = new Uint8ClampedArray(w.instance.exports.memory.buffer, Number(pixels_ptr), app.width*app.height*4);
             ctx.putImageData(new ImageData(pixels, app.width, app.height), 0, 0);
         },

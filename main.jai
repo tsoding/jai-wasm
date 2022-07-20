@@ -17,7 +17,7 @@ logo_y := 150;
 logo_dx := 150;
 logo_dy := 150;
 
-render :: (pixels: *u32) #foreign wasmstub;
+render :: (pixels: *u32, w: s32, h: s32) #foreign wasmstub;
 set_context :: (c: *Context) #foreign wasmstub;
 
 Image :: struct {
@@ -130,7 +130,7 @@ update :: (dt: int) {
     }
 
     copy_image(LOGO_IMAGE, logo_x, logo_y);
-    render(display.data);
+    render(display.data, WIDTH, HEIGHT);
 }
 
 wasmstub :: #foreign_library "libwasmstub";
