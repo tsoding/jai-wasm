@@ -29,17 +29,24 @@ bake_wasm_logo :: (file_path: string, w: s32, h: s32) -> Image {
     x, y: s32;
     original_pixels_data := stbi_load(temp_c_string(file_path), *x, *y, null, 4);
     if !original_pixels_data {
-        compiler_report(tprint("Compile time loading of % failed!", file_path), mode=.ERROR);
+        compiler_report(tprint("Could not load WASM logo from % at compile time!", file_path), mode=.ERROR);
         return .{};
     }
     defer stbi_image_free(original_pixels_data);
 
-    resized_pixels_data := alloc(w*h*4); // TODO: check for failed allocation?
+    resized_pixels_data := alloc(w*h*4);
+    if !resized_pixels_data {
+        compiler_report("Could not allocate memory for resized WASM log at compile time!", mode=.ERROR);
+        return .{};
+    }
     defer free(resized_pixels_data);
-    // TODO: does stbir_resize_uint8 fail? If so we should check the result.
-    stbir_resize_uint8(original_pixels_data, x, y, x*4,
-                       resized_pixels_data, w, h, w*4,
-                       num_channels = 4);
+    resized_ok := stbir_resize_uint8(original_pixels_data, x, y, x*4,
+                                     resized_pixels_data, w, h, w*4,
+                                     num_channels = 4);
+    if !resized_ok {
+        compiler_report("Could not resize WASM logo at compile time!", mode=.ERROR);
+        return .{};
+    }
 
     pixels : []u8;
     pixels.data = resized_pixels_data;
