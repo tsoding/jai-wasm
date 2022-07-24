@@ -1,10 +1,12 @@
 const NULL64 = 0n;
+const EBADF = 9;
 
 let app = document.getElementById("app");
 let ctx = app.getContext("2d");
 
 let w = null;
 let context = null;
+let output_buffer = "";
 
 function find_name_by_regexp(exports, prefix) {
     const re = new RegExp('^'+prefix+'_[0-9a-z]+$');
@@ -30,12 +32,33 @@ function make_environment(...envs) {
 }
 
 // Standard runtime
+// TODO: The Standard Runtime is actually Linux specific!!!
+// What I just realized is that if you try to compile this example on Windows, this
+// entire runtime becomes invalid because it's a Linux runtime! So this specific runtime has
+// to be different depending on the platform you are compiling it on! Cheesus...
 const std = {
     "write": (fd, buf, count) => {
+        let log = undefined;
+        switch (fd) {
+            case 1: log = console.log;   break;
+            case 2: log = console.error; break;
+            default: {
+                console.error("write: Unsupported file descriptor "+fd);
+                return -EBADF;
+            }
+        }
         const buffer = w.instance.exports.memory.buffer;
         const bytes = new Uint8Array(buffer, Number(buf), Number(count));
-        // TODO: buffer write calls and "flush" them with console.log() on newlines
-        console.log(new TextDecoder().decode(bytes));
+        let text = new TextDecoder().decode(bytes);
+        let index = text.indexOf('\n');
+        while (index >= 0) {
+            output_buffer += text.slice(0, index);
+            text = text.slice(index + 1);
+            log(output_buffer);
+            output = "";
+            index = text.indexOf('\n');
+        }
+        if (text.length > 0) output_buffer += text;
         return count;
     },
     "memset": (s, c, n) => {
