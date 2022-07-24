@@ -41,7 +41,6 @@ build_wasm :: (base_name: string) {
         exit(1);
     }
 
-
     if !build_cpp_dynamic_lib("libwasmstub", "wasmstub.c") {
         print("Error: Could not build dynamic lib with external names");
         exit(1);
@@ -92,8 +91,8 @@ build_wasm :: (base_name: string) {
             case .PHASE; {
                 phase := cast(*Message_Phase) message;
                 if phase.phase == .POST_WRITE_EXECUTABLE {
-                    assert(phase.compiler_generated_object_files.count == 1);
-                    assert(object_file_to_translate_to_wasm.count == 0);
+                    assert(phase.compiler_generated_object_files.count == 1, "The build process supports only a single object file compilation");
+                    assert(object_file_to_translate_to_wasm.count == 0, "The build process supports only a single object file compilation");
                     object_file_to_translate_to_wasm = phase.compiler_generated_object_files[0];
                 }
             }
@@ -101,11 +100,14 @@ build_wasm :: (base_name: string) {
             case .COMPLETE; break;
         }
     }
-    assert(object_file_to_translate_to_wasm.count > 0);
 
     compiler_end_intercept(w);
 
-    build_wasm(path_strip_extension(object_file_to_translate_to_wasm));
+    if object_file_to_translate_to_wasm.count > 0 {
+        build_wasm(path_strip_extension(object_file_to_translate_to_wasm));
+    } else {
+        print("Could not generate the object file. Skipping WASM translation step...\n");
+    }
 
     set_build_options_dc(.{do_output=false});
 }
