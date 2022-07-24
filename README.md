@@ -1,6 +1,6 @@
 # Jai WebAssembly Proof-of-Concept
 
-[![thumbnail](./thumbnail.png)](https://tsoding.org/jai-wasm/)
+[![thumbnail](./img/thumbnail.png)](https://tsoding.org/jai-wasm/)
 
 *Screenshot from [https://tsoding.org/jai-wasm/](https://tsoding.org/jai-wasm/)*
 
