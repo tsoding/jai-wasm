@@ -28,8 +28,8 @@ build_wasm :: (base_name: string) {
     O_NAME := tprint("%.o", base_name);
 
     cmd("clang", "--target=wasm64", "-o", O_NAME, "-c", BC_NAME);
-    cmd("wasm-ld", "-m", "wasm64", "--no-entry", "--export-all", "--allow-undefined", O_NAME, "-o", "main64.wasm");
-    cmd(tprint("%/wasm64232", THIRD_PARTY_PATH), "-o", "main32.wasm", "main64.wasm");
+    cmd("wasm-ld", "-m", "wasm64", "--no-entry", "--export-all", "--allow-undefined", O_NAME, "-o", "./wasm/main64.wasm");
+    cmd(tprint("%/wasm64232", THIRD_PARTY_PATH), "-o", "./wasm/main32.wasm", "./wasm/main64.wasm");
 }
 
 #run {

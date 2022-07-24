@@ -27,7 +27,7 @@ function make_environment(env) {
     });
 }
 
-WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
+WebAssembly.instantiateStreaming(fetch('wasm/main32.wasm'), {
     "env": make_environment({
         "render": (pixels_ptr, width, height) => {
             app.width = width;
