@@ -34,6 +34,16 @@ If you ever tried to compile Jai to WebAssembly you are probably familiar with t
 
 So to avoid that error you need to compiler with `--target=wasm64` flag of Clang which generates a binary with [memory64](https://github.com/WebAssembly/memory64) extension. But since this extension is experimental (yes, addressing memory with 64 bits is experimental in 2022...) such binary may not work everywhere. To make the binary more portable we convert it to wasm32 using [wasm64232](https://github.com/tsoding/wabt-wasm64232) utility.
 
+### Calling to JavaScript Functions via the `libwasmstub` Dynamic Library Hack
+
+TBD
+
+### Passing the Context from JavaScript
+
+Each Jai function (except the ones marked with `#no_context`) accepts implicit pointer to Context. If you want to enable the Jai code to use it you need to figure out that pointer in JavaScript and pass it accordingly.
+
+TBD
+
 ## Contribution
 
 If you have any questions, suggestions or something is not documented well feel free to file an Issue or a PR.
