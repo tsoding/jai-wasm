@@ -6,9 +6,10 @@ let ctx = app.getContext("2d");
 let w = null;
 let context = null;
 
-function find_name_by_prefix(exports, prefix) {
+function find_name_by_regexp(exports, prefix) {
+    const re = new RegExp('^'+prefix+'_[0-9a-z]+$');
     for (let name in exports) {
-        if (name.startsWith(prefix)) {
+        if (re.test(name)) {
             return exports[name];
         }
     }
@@ -50,7 +51,7 @@ WebAssembly.instantiateStreaming(fetch('./main32.wasm'), {
     })
 }).then(w0 => {
     w = w0;
-    const update = find_name_by_prefix(w.instance.exports, "update_");
+    const update = find_name_by_regexp(w.instance.exports, "update");
 
     w.instance.exports.main(0, NULL64);
 
