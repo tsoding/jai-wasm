@@ -8,7 +8,7 @@
 
 WIDTH :: 640;
 HEIGHT :: 480;
-LOGO_IMAGE :: #run bake_wasm_logo(128, 128);
+LOGO_IMAGE :: #run bake_wasm_logo("./img/WebAssembly_Logo.png", 128, 128);
 
 display : [HEIGHT*WIDTH]u32;
 logo_x := 100;
@@ -25,13 +25,18 @@ Image :: struct {
     pixels: []u32;
 }
 
-bake_wasm_logo :: (w: s32, h: s32) -> Image {
+bake_wasm_logo :: (file_path: string, w: s32, h: s32) -> Image {
     x, y: s32;
-    original_pixels_data := stbi_load(temp_c_string("WebAssembly_Logo.png"), *x, *y, null, 4);
+    original_pixels_data := stbi_load(temp_c_string(file_path), *x, *y, null, 4);
+    if !original_pixels_data {
+        compiler_report(tprint("Compile time loading of % failed!", file_path), mode=.ERROR);
+        return .{};
+    }
     defer stbi_image_free(original_pixels_data);
 
-    resized_pixels_data := alloc(w*h*4);
+    resized_pixels_data := alloc(w*h*4); // TODO: check for failed allocation?
     defer free(resized_pixels_data);
+    // TODO: does stbir_resize_uint8 fail? If so we should check the result.
     stbir_resize_uint8(original_pixels_data, x, y, x*4,
                        resized_pixels_data, w, h, w*4,
                        num_channels = 4);
