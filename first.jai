@@ -57,6 +57,7 @@ build_wasm :: (base_name: string) {
 
     add_build_file("main.jai", w);
 
+    // TODO: move the WASM translation code to a separate function so it's easily copy-pastable to other projects
     object_file_to_translate_to_wasm := "";
     while true {
         message := compiler_wait_for_message();

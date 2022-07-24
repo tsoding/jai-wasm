@@ -16,44 +16,50 @@ function find_name_by_regexp(exports, prefix) {
     return null;
 }
 
-function make_environment(env) {
-    return new Proxy(env, {
+function make_environment(...envs) {
+    return new Proxy(envs, {
         get(target, prop, receiver) {
-            if (!env.hasOwnProperty(prop)) {
-                return (...args) => {console.error("NOT IMPLEMENTED: "+prop, args)}
+            for (let env of envs) {
+                if (env.hasOwnProperty(prop)) {
+                    return env[prop];
+                }
             }
-            return env[prop];
+            return (...args) => {console.error("NOT IMPLEMENTED: "+prop, args)}
         }
     });
 }
 
+// Standard runtime
+const std = {
+    "write": (fd, buf, count) => {
+        const buffer = w.instance.exports.memory.buffer;
+        const bytes = new Uint8Array(buffer, Number(buf), Number(count));
+        // TODO: buffer write calls and "flush" them with console.log() on newlines
+        console.log(new TextDecoder().decode(bytes));
+        return count;
+    },
+    "memset": (s, c, n) => {
+        const buffer = w.instance.exports.memory.buffer;
+        const bytes = new Uint8Array(buffer, Number(s), Number(n));
+        bytes.fill(c);
+        return s;
+    },
+    "set_context": (c) => context = c,
+};
+
+// Demo runtime
+const demo = {
+    "render": (pixels_ptr, width, height) => {
+        const buffer = w.instance.exports.memory.buffer;
+        app.width = width;
+        app.height = height;
+        const pixels = new Uint8ClampedArray(buffer, Number(pixels_ptr), app.width*app.height*4);
+        ctx.putImageData(new ImageData(pixels, app.width, app.height), 0, 0);
+    },
+};
+
 WebAssembly.instantiateStreaming(fetch('wasm/main32.wasm'), {
-    "env": make_environment({
-        "render": (pixels_ptr, width, height) => {
-            const buffer = w.instance.exports.memory.buffer;
-            app.width = width;
-            app.height = height;
-            const pixels = new Uint8ClampedArray(buffer, Number(pixels_ptr), app.width*app.height*4);
-            ctx.putImageData(new ImageData(pixels, app.width, app.height), 0, 0);
-        },
-        // TODO: move things like write/memset/etc to make_environment()
-        // Their implementation is probably gonna be the same regardless of your application.
-        // So why not make it easily copy-pastable to other projects along with make_environment().
-        "write": (fd, buf, count) => {
-            const buffer = w.instance.exports.memory.buffer;
-            const bytes = new Uint8Array(buffer, Number(buf), Number(count));
-            // TODO: buffer write calls and "flush" them with console.log() on newlines
-            console.log(new TextDecoder().decode(bytes));
-            return count;
-        },
-        "memset": (s, c, n) => {
-            const buffer = w.instance.exports.memory.buffer;
-            const bytes = new Uint8Array(buffer, Number(s), Number(n));
-            bytes.fill(c);
-            return s;
-        },
-        "set_context": (c) => context = c,
-    })
+    "env": make_environment(std, demo)
 }).then(w0 => {
     w = w0;
     const update = find_name_by_regexp(w.instance.exports, "update");
