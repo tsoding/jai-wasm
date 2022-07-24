@@ -30,14 +30,19 @@ function make_environment(env) {
 WebAssembly.instantiateStreaming(fetch('wasm/main32.wasm'), {
     "env": make_environment({
         "render": (pixels_ptr, width, height) => {
+            const buffer = w.instance.exports.memory.buffer;
             app.width = width;
             app.height = height;
-            const pixels = new Uint8ClampedArray(w.instance.exports.memory.buffer, Number(pixels_ptr), app.width*app.height*4);
+            const pixels = new Uint8ClampedArray(buffer, Number(pixels_ptr), app.width*app.height*4);
             ctx.putImageData(new ImageData(pixels, app.width, app.height), 0, 0);
         },
+        // TODO: move things like write/memset/etc to make_environment()
+        // Their implementation is probably gonna be the same regardless of your application.
+        // So why not make it easily copy-pastable to other projects along with make_environment().
         "write": (fd, buf, count) => {
             const buffer = w.instance.exports.memory.buffer;
             const bytes = new Uint8Array(buffer, Number(buf), Number(count));
+            // TODO: buffer write calls and "flush" them with console.log() on newlines
             console.log(new TextDecoder().decode(bytes));
             return count;
         },
