@@ -5,59 +5,30 @@
 #import "File";
 #import "String";
 
-THIRD_PARTY_PATH :: "./3rd_party";
-LLVM_VERSION :: "13.0.0";
-WABT_VERSION :: "1.0.29";
+build_wasm :: (base_name: string) {
+    cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location) {
+        log("[CMD] %\n", get_quoted_command_string(args));
 
-cmd :: (args: .. string, redirect_stdout_to_file := "", loc := #caller_location) {
-    log("[CMD] %\n", get_quoted_command_string(args));
+        result, output_string, error_string := run_command(..args, capture_and_return_output = redirect_stdout_to_file != "");
+        if result.exit_code {
+            if output_string then log("%", output_string);
+            if error_string then log("%", error_string);
+            compiler_report(tprint("Command failed with exit code '%'.\n", result.exit_code), loc);
+            exit(result.exit_code);
+        }
 
-    result, output_string, error_string := run_command(..args, capture_and_return_output = redirect_stdout_to_file != "");
-    if result.exit_code {
-        if output_string then log("%", output_string);
-        if error_string then log("%", error_string);
-        compiler_report(tprint("Command failed with exit code '%'.\n", result.exit_code), loc);
-        exit(result.exit_code);
+        if redirect_stdout_to_file then write_entire_file(redirect_stdout_to_file, output_string);
     }
 
-    if redirect_stdout_to_file then write_entire_file(redirect_stdout_to_file, output_string);
-}
-
-build_wasm :: (base_name: string) {
     BC_NAME := tprint("%.bc", base_name);
     O_NAME := tprint("%.o", base_name);
 
     cmd("clang", "--target=wasm64", "-o", O_NAME, "-c", BC_NAME);
     cmd("wasm-ld", "-m", "wasm64", "--no-entry", "--export-all", "--allow-undefined", O_NAME, "-o", "./wasm/main64.wasm");
-    cmd(tprint("%/wasm64232", THIRD_PARTY_PATH), "-o", "./wasm/main32.wasm", "./wasm/main64.wasm");
+    cmd("./3rd_party/wasm64232", "-o", "./wasm/main32.wasm", "./wasm/main64.wasm");
 }
 
-#run {
-    assert(OS == .LINUX, "TODO: Only Linux is supported for now");
-
-    w := compiler_create_workspace("Jai WASM");
-    if !w {
-        print("Error: Could not create a workspace\n");
-        exit(1);
-    }
-
-    if !build_cpp_dynamic_lib("libwasmstub", "wasmstub.c") {
-        print("Error: Could not build dynamic lib with external names");
-        exit(1);
-    }
-
-    bo := get_build_options(w);
-    bo.output_executable_name            = "wasm-jai";
-    bo.optimization_level                = .RELEASE;
-    bo.llvm_options.output_bitcode       = true;
-    bo.llvm_options.enable_split_modules = false;
-    set_build_options(bo, w);
-
-    compiler_begin_intercept(w);
-
-    add_build_file("main.jai", w);
-
-    // TODO: move the WASM translation code to a separate function so it's easily copy-pastable to other projects
+prepare_object_file_for_build_wasm :: (w: Workspace) -> string {
     object_file_to_translate_to_wasm := "";
     while true {
         message := compiler_wait_for_message();
@@ -102,6 +73,32 @@ build_wasm :: (base_name: string) {
         }
     }
 
+    return object_file_to_translate_to_wasm;
+}
+
+#run {
+    assert(OS == .LINUX, "TODO: Only Linux is supported for now");
+
+    w := compiler_create_workspace("Jai WASM");
+    if !w {
+        print("Error: Could not create a workspace\n");
+        exit(1);
+    }
+
+    if !build_cpp_dynamic_lib("libwasmstub", "wasmstub.c") {
+        print("Error: Could not build dynamic lib with external names");
+        exit(1);
+    }
+
+    bo := get_build_options(w);
+    bo.output_executable_name            = "wasm-jai";
+    bo.llvm_options.output_bitcode       = true;
+    bo.llvm_options.enable_split_modules = false;
+    set_build_options(bo, w);
+
+    compiler_begin_intercept(w);
+    add_build_file("main.jai", w);
+    object_file_to_translate_to_wasm := prepare_object_file_for_build_wasm(w);
     compiler_end_intercept(w);
 
     if object_file_to_translate_to_wasm.count > 0 {

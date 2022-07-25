@@ -36,13 +36,13 @@ So to avoid that error you need to compiler with `--target=wasm64` flag of Clang
 
 ### Calling to JavaScript Functions via the `libwasmstub` Dynamic Library Hack
 
-TBD
+TODO
 
 ### Passing the Context from JavaScript
 
 Each Jai function (except the ones marked with `#no_context`) accepts implicit pointer to Context. If you want to enable the Jai code to use it you need to figure out that pointer in JavaScript and pass it accordingly.
 
-TBD
+TODO
 
 ## Contribution
 

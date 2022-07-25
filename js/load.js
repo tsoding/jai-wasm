@@ -67,6 +67,8 @@ const std = {
         bytes.fill(c);
         return s;
     },
+    "fabs": Math.abs,
+    "powf": Math.pow,
     "set_context": (c) => context = c,
 };
 
