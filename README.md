@@ -40,9 +40,13 @@ TODO
 
 ### Passing the Context from JavaScript
 
-Each Jai function (except the ones marked with `#no_context`) accepts implicit pointer to Context. If you want to enable the Jai code to use it you need to figure out that pointer in JavaScript and pass it accordingly.
+Each Jai function (except the ones that are marked with `#no_context`) accepts an implicit pointer to Context. If you want to enable the Jai code to use the Context you need to figure out that pointer in JavaScript and pass it accordingly.
 
-TODO
+The way we figure it out is by calling the entry point of the Jai program from JavaScript. Literally the `main` function. Within that function we call `set_context(*context)` which jumps back to JavaScript and in JavaScript we save that pointer in a global variable somewhere.
+
+From now on every time we need to pass the Context to any of the Jai functions we just pass the saved pointer.
+
+For more details see `main` procedure in [./main.jai](./main.jai) and `set_context` function in [./js/load.js](./js/load.js).
 
 ## Contribution
 
