@@ -48,6 +48,12 @@ From now on every time we need to pass the Context to any of the Jai functions w
 
 For more details see `main` procedure in [./main.jai](./main.jai) and `set_context` function in [./js/load.js](./js/load.js).
 
+## Screencast
+
+This code was written on a livestream:
+
+[![thumbnail](./thumbnails/thumbnail.png)](https://www.youtube.com/watch?v=8_5L8yVHcII)
+
 ## Contribution
 
 If you have any questions, suggestions or something is not documented well feel free to file an Issue or a PR.
